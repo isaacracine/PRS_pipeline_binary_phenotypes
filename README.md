@@ -85,9 +85,9 @@ conda env create -f snakemake_PRS.yml
 Important: note down the directory in which the environment was created, you will need it to adapt the slurm job script.
 
 
-## OUTPUT DATA:
+## OUTPUT DIRECTORY:
 
-The output data will be placed in a directory called ```output_data/``` that contains a different directory per tool. Also, inside each of the tools' directories, we will separate the data into ```target_data/``` and ```exteranl_data/```, depending if it comes from the tool with the 1000genome data (```external_data/```) or from the target data (```target_data/```). To create all these directories run:
+The output data will be placed in a directory called ```output_data/``` that contains a different directory per tool. Also, inside each of the tools' directories, we will separate the data into ```target_data/``` and ```external_data/```, depending on if it comes from the tool with the 1000genome data (```external_data/```) or from the target data (```target_data/```). To create all these directories run:
 
 ```
 cd IBP_PRS_2022
@@ -109,7 +109,7 @@ mkdir 005_comparison/
 ```
 
 ## ADAPTING THE SNAKEMAKE FILE
-Snakemake is a wonderful workflow engine which allows for easy adaptability and extension. At the top of the script you will see several global variables, all of which you will need to fill in. They include the desired reference genome for a list of options, different p-valur thresholds to test in PLINK and PRSice, different shrinkage values to test in lassoSum and the names of specific columns from the GWAS summary statistic file. Here is an example:
+Snakemake is a wonderful workflow engine which allows for easy adaptability and extension. At the top of the script you will see several global variables, all of which you will need to fill in. They include the desired reference genome for a list of options, different p-value thresholds to test in PLINK and PRSice, different shrinkage values to test in lassoSum and the names of specific columns from the GWAS summary statistic file. Here is an example:
 
 ```
 # === Prefix of the files  ===
@@ -134,7 +134,7 @@ info_value = "0.8"
 
 The user should provide the file names and column names as above. The thresholding and shrinkage parameters can be adapted to allow for more niche testing.
 
-The more thresholds and shrinkage parameters that are tested the longer the pipeline will need, espically for lassoSum.
+The more thresholds and shrinkage parameters that are tested the longer the pipeline will need, specially for lassoSum.
 
 ## ADAPTING THE SLURM JOB SCRIPT
 
@@ -150,22 +150,23 @@ Begin your BASH script by setting the directory to the global snakemake file dow
 #PBS -l walltime=24:00:00
 #PBS -l pmem=120gb
 #PBS -A <account>
+
 cd ~
 cd <directory_to_snakemake>
 module purge
 eval "$(conda shell.bash hook)"
-conda snakemake_PRS
+conda activate snakemake_PRS
 snakemake -s Snakefile --cores 4 --use-conda
 ```
 
 Once this is set up CONGRADULATIONS! You can now submit this job to your cluster's scheduler and patiently wait for your results. 
 
 ## OUTPUT FILES
-Several intermediate files, files containing statistics and predicted PRS will be generated. Once again the user should focus their attention to the `005_comparison/` directory. This is because this directory will contain the useful plots comparing the performance of the tools. Once again, the PRS generated from these tools are **not** meant to be used directly for further analyses or publshing, rather to help the user to select which tool will have the best performance on their dataset.
+Several intermediate files, files containing statistics and predicted PRS will be generated. Once again the user should focus their attention to the `005_comparison/` directory. This is because this directory will contain the useful plots comparing the performance of the tools. Once again, the PRS generated from these tools are **not** meant to be used directly for further analyses or publIshing, rather to help the user to select which tool will have the best performance on their dataset.
 
 ## OUTPUT PLOTS
 Several plots will be generated for the prediction of PRS and comparison of the performance metrics across tools.
-* Each tool will have a boxplot of PRS generated comparing the cases and controls
+* A boxplot containing the four tools will be generated comparing the cases and controls
 * A ROC curve will be generated to show how well the logistic model built from each tools PRS predictions is at correctly classifying cases and controls
 * Bar plots comparing the AUC and R<sup>2</sup> values across the tools, generated using 1000 bootstrap samples
 
@@ -176,7 +177,7 @@ The GWAS base dataset should contain uppercase alleles. Distuinguish affect alle
 PLINK binary files use -9 to represent missing values, however these will not be considered as missing values in our pipeline given some of the tools used do not recognize -9 as missing. It is important to remove these individuals or phenotypes prior to running the pipeline. 
 
 ### ADAPTING YOUR LINEAR MODELS
-When calculating PRS we account for covariates. However, when constructing logisitc regression models we do not account for any covariates since our example data did not have any. Therefore, if you wish to include covariates in your logisitc regression you will have to manually adapt the R scripts. One R script, _______, decides the best PRS generated across the different thresholds tested. Another R script, _______, produces the plots for comparing the tools. The covariates can be added by addapting the logisitc regression code as follwos:
+When calculating PRS we account for covariates. However, when constructing logisitc regression models we do not account for any covariates since our example data did not have any. Therefore, if you wish to include covariates in your logisitc regression you will have to manually adapt the R scripts. One R script, _______, decides the best PRS generated across the different thresholds tested. Another R script, _______, produces the plots for comparing the tools. The covariates can be added by addapting the logisitc regression code as follows:
 
 ```
 #original command
