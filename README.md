@@ -82,6 +82,8 @@ cd IBP_PRS_2022/conda_env/
 conda env create -f snakemake_PRS.yml
 ```
 
+Important: note down the directory in which the environment was created, you will need it to adapt the slurm job script.
+
 
 ## OUTPUT DATA:
 
