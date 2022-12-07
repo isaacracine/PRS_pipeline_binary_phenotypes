@@ -87,7 +87,7 @@ Important: note down the directory in which the environment was created, you wil
 
 ## OUTPUT DATA:
 
-The output data will be placed in a directory called ```output_data/``` that contains a different directry per tool. Also, inside each of the tools' directories, we will separate the data into ```target_data/``` and ```exteranl_data/```, depending if it comes from the tool with the 1000genome data (```external_data/```) or from the target data (```target_data/```). To create all these directories run:
+The output data will be placed in a directory called ```output_data/``` that contains a different directory per tool. Also, inside each of the tools' directories, we will separate the data into ```target_data/``` and ```exteranl_data/```, depending if it comes from the tool with the 1000genome data (```external_data/```) or from the target data (```target_data/```). To create all these directories run:
 
 ```
 cd IBP_PRS_2022
