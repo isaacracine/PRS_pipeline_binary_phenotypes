@@ -176,14 +176,14 @@ The GWAS base dataset should contain uppercase alleles. Distuinguish affect alle
 ### MISSING PHENOTYPES
 PLINK binary files use -9 to represent missing values, however these will not be considered as missing values in our pipeline given some of the tools used do not recognize -9 as missing. It is important to remove these individuals or phenotypes prior to running the pipeline. 
 
-### ADAPTING YOUR LINEAR MODELS
-When calculating PRS we account for covariates. However, when constructing logisitc regression models we do not account for any covariates since our example data did not have any. Therefore, if you wish to include covariates in your logisitc regression you will have to manually adapt the R scripts. One R script, _______, decides the best PRS generated across the different thresholds tested. Another R script, _______, produces the plots for comparing the tools. The covariates can be added by addapting the logisitc regression code as follows:
+### ADAPTING YOUR LOGISIC MODELS
+When calculating logistic models for explaining the phenotype from PRS results we do not account for principal components or covariates. Therefore, if you wish to include covariates in your logisitc regression you will have to manually adapt the R scripts. One R script, `global_best_plots.R`, decides the best PRS generated across the different thresholds tested. Another R script, `global_performance_plots.R`, produces the plots for comparing the tools. The principal components and covariates can be added by adapting the logisitc regression code as follows:
 
 ```
 #original command
 glm(phenos ~ <prs_column>, data = std_prs_ph.prsice, family = binomial(link = "logit"))
 #updated command 
-glm(phenos ~ <prs_column> + <covariate_1>  + ... + <covariate_n>, data = std_prs_ph.prsice, family = binomial(link = "logit"))
+glm(phenos ~ <prs_column> + <pc_1> + <pc_2> + ... + <covariate_1>  + ... + <covariate_n>, data = std_prs_ph.prsice, family = binomial(link = "logit"))
 ```
 
 
