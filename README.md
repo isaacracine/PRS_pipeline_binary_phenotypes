@@ -1,9 +1,9 @@
 # PRS pipeline for binary phenotypes
 This repository will host the pipeline and necessary files to calculate and compare PRS for multiple tools  (implemented via snakemake)
 
-With this pipeline, we calculate polygenic risk scores (PRS) using four different PRS-calculating tools (PLINK, PRSice, LDPred and lassoSum). Additively, we compare the calculated PRS of each method to eachother. 
+With this pipeline, we calculate polygenic risk scores (PRS) using four different PRS-calculating tools (PLINK, PRSice, lassosum ans LDpred). Additively, we compare the calculated PRS of each method to eachother. 
 
-This project aims to compare four different tools that calculate Polygenic Risk Scores (PRS). These tools are PLINK, PRSice, Lasso Sum and LDPred. Currently, this workflow only allows for testing of **binary** phenotypes, such as cases and controls.
+This project aims to compare four different tools that calculate Polygenic Risk Scores (PRS). These tools are PLINK, PRSice, Lassosum and LDpred. Currently, this workflow only allows for testing of **binary** phenotypes, such as cases and controls.
 
 The heart of this project is a Snakemake script, therefore allowing for extension with more tools. Additionally, the project is supported for users that have access to a remote cluster. The scripts require the submission of a SLURM job, however if your cluster uses another job scheduler this can easily be adapted as well. The aim of using this pipeline is not to take the PRS directly. Rather it should aid the user in selecting the best tool to use for calculating PRS on their specific dataset. The user should rerun their own analysis on such tool with their data to allow for more fine tuning. 
 
@@ -37,7 +37,7 @@ git clone https://github.com/jcasadogp/IBP_PRS_2022.git
 * The command is NOT CLONE, because I have been able to edit a push changes from local, and we don't want that.
 
 It includes the following folders:
-* Conda environments: several .yml files that will be used by the different scripts to activate the contained conda environments. These .yml files are what allows for the running of lassoSum, LDpred and generation of performance metric plots.
+* Conda environments: several .yml files that will be used by the different scripts to activate the contained conda environments. These .yml files are what allows for the running of lassosum, LDpred and generation of performance metric plots.
 * plink: installation and executable files for PLINK
 * prsice: installation, executable and R script for PRSice
 * r_scripts: it contains several R scripts that are used in the project 
@@ -99,9 +99,9 @@ mkdir 001_plink/external_data/
 mkdir 002_prsice/
 mkdir 002_prsice/target_data/
 mkdir 002_prsice/external_data/
-mkdir 003_lassoSum/
-mkdir 003_lassoSum/target_data/
-mkdir 003_lassoSum/external_data/
+mkdir 003_lassosum/
+mkdir 003_lassosum/target_data/
+mkdir 003_lassosum/external_data/
 mkdir 004_LDpred/
 mkdir 004_LDpred/target_data/
 mkdir 004_LDpred/external_data/
@@ -109,7 +109,7 @@ mkdir 005_comparison/
 ```
 
 ## ADAPTING THE SNAKEMAKE FILE
-Snakemake is a wonderful workflow engine which allows for easy adaptability and extension. At the top of the script you will see several global variables, all of which you will need to fill in. They include the desired reference genome for a list of options, different p-value thresholds to test in PLINK and PRSice, different shrinkage values to test in lassoSum and the names of specific columns from the GWAS summary statistic file. Here is an example:
+Snakemake is a wonderful workflow engine which allows for easy adaptability and extension. At the top of the script you will see several global variables, all of which you will need to fill in. They include the desired reference genome for a list of options, different p-value thresholds to test in PLINK and PRSice, different shrinkage values to test in lassosum and the names of specific columns from the GWAS summary statistic file. Here is an example:
 
 ```
 # === Prefix of the files  ===
@@ -134,7 +134,7 @@ info_value = "0.8"
 
 The user should provide the file names and column names as above. The thresholding and shrinkage parameters can be adapted to allow for more niche testing.
 
-The more thresholds and shrinkage parameters that are tested the longer the pipeline will need, specially for lassoSum.
+The more thresholds and shrinkage parameters that are tested the longer the pipeline will need, specially for lassosum.
 
 ## ADAPTING THE SLURM JOB SCRIPT
 
@@ -198,7 +198,7 @@ Choi, S.W., Mak, T.SH. & O’Reilly, P.F. Tutorial: a guide to performing polyge
 * Repository can be found [here](https://github.com/choishingwan/PRS-Tutorial)
 
 Mak, Timothy Shin Heng, et al. "Polygenic scores via penalized regression on summary statistics." Genetic epidemiology 41.6 (2017): 469-480. 
-* lassoSum's repository can be found [here](https://github.com/tshmak/lassosum) repository
+* lassosum's repository can be found [here](https://github.com/tshmak/lassosum) repository
 
  Purcell S, Neale B, Todd-Brown K, Thomas L, Ferreira MAR, Bender D, Maller J, Sklar P, de Bakker PIW, Daly MJ & Sham PC (2007) 
  PLINK: a toolset for whole-genome association and population-based 
