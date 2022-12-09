@@ -130,6 +130,7 @@ p_value_col = "P.value" #the column of associated p-values of the variants
 snp_col = "SNP_hg38" #the column of the SNP identifiers of the variants
 maf_value = "0.01" #can be a MAF threshold or the name of the column containing MAF estimates
 info_value = "0.8"
+binary_pheno = "T" #indicate if the phenotype is a binary trait or not. Values: "T" or "F"
 ```
 
 The user should provide the file names and column names as above. The thresholding and shrinkage parameters can be adapted to allow for more niche testing.
