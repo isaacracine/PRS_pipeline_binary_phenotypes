@@ -1,0 +1,603 @@
+#TO-DO!!!!!!!!!!!
+
+#input for ethnic background
+#input for maf, other params
+
+from datetime import date
+
+# === Date for the output plots ===
+today = date.today().strftime("%Y-%m-%d")
+print("\nToday's date:", today)
+
+# === Directories ===
+project_dir = "/staging/leuven/stg_00092/IBP_PRSproject/1_Intestinal_Bowel_Disease/PRS_pipeline_binary_phenotypes/"
+plink_output_dir = "output_data/001_plink/"
+prsice_output_dir = "output_data/002_prsice/"
+lasso_output_dir = "output_data/003_lassosum/"
+ldpred_output_dir = "output_data/004_LDpred/"
+comparison_output_dir = "output_data/005_comparison/"
+
+
+# === Prefix of the files  ===
+TARGET_files = "IBD_GSA_fin_maf"
+TARGET_non_imputed_files = "IBD_GSA_fin_maf"
+EXTERNAL_file = "1000G_EUR_fin_maf"
+EXTERNAL_non_imputed_file = "1000G_EUR_fin_maf"
+GWAS_file = "GWAS_summary_stats.txt"
+PHENO_file = "final_phenotypes.txt"
+
+# === Parameters for tools ===
+pval_thresholds = "5e-8,1e-5,0.01,0.05,0.1,0.5"
+lasso_thresholding_values = "0.2,0.5,0.9,1"
+ldpred_pval = "0.05,0.01,0.001,0.0001"
+genome_build = "EUR.hg38"
+noneffect_allele = "Allele1"
+effect_allele = "Allele2"
+chromosome_col = "CHR"
+pos_col = "pos_hg38"
+beta_col = "Effect"
+p_value_col = "P.value"
+snp_col = "SNP_hg38"
+maf_value = "0.01"
+info_value = "0.8"
+binary_pheno = "T"
+LDpred_num_pvales = 1
+
+rule all:
+	input:
+		clumped = expand(project_dir + plink_output_dir + "target_data/{target_name}.clumped", target_name = TARGET_files),
+		clumped_ex = expand(project_dir + plink_output_dir + "external_data/{ext_name}.clumped", ext_name = EXTERNAL_file),
+		snp =  expand(project_dir + plink_output_dir + "target_data/{target_name}.valid.snp", target_name = TARGET_files),
+		snp_ex =  expand(project_dir + plink_output_dir + "external_data/{ext_name}.valid.snp", ext_name = EXTERNAL_file),
+		pvalue = project_dir + plink_output_dir + "target_data/SNP.pvalue",
+		pvalue_ex =  project_dir + plink_output_dir + "external_data/SNP.pvalue",
+		range_file =  project_dir + plink_output_dir + "target_data/range_list",
+		range_file_ex = project_dir + plink_output_dir + "external_data/range_list",
+		new_stats =  project_dir + plink_output_dir + "target_data/condensed.GWAS.stats",
+		new_stats_ex =  project_dir + plink_output_dir + "external_data/condensed.GWAS.stats",
+		status =  expand(project_dir + plink_output_dir + "target_data/{target_name}_prs_status", target_name = TARGET_files),
+		status_ex =  expand(project_dir  + plink_output_dir + "external_data/{ext_name}_prs_status", ext_name = EXTERNAL_file),
+
+		snp_list = expand(project_dir + prsice_output_dir + "target_data/{target_name}.snp", target_name=TARGET_files),
+		all_score_target = expand(project_dir + prsice_output_dir + "target_data/{target_name}.all_score", target_name=TARGET_files),
+		all_score_external = expand(project_dir + prsice_output_dir + "external_data/{ext_name}.all_score", ext_name = EXTERNAL_file),
+
+		valid_plot = project_dir + lasso_output_dir + "target_data/" + TARGET_files + "_validation_plot.pdf",
+		prs_lasso1_ext = project_dir + lasso_output_dir + "external_data/" + EXTERNAL_file + "_prs_lasso1_external.txt", 
+		prs_lasso2_ext = project_dir + lasso_output_dir + "external_data/" + EXTERNAL_file + "_prs_lasso2_external.txt", 
+		prs_lasso3_ext = project_dir + lasso_output_dir + "external_data/" + EXTERNAL_file + "_prs_lasso3_external.txt", 
+		prs_lasso4_ext = project_dir + lasso_output_dir + "external_data/" + EXTERNAL_file + "_prs_lasso4_external.txt",
+
+		bk_file = expand(project_dir + "data/{nonimp_name}.bk", nonimp_name = TARGET_non_imputed_files),
+		rds_file = expand(project_dir + "data/{nonimp_name}.rds", nonimp_name = TARGET_non_imputed_files),
+		
+		ldpred_file_1 = expand(project_dir + ldpred_output_dir + "target_data/{nonimp_name}_1.txt", nonimp_name = TARGET_non_imputed_files),
+		ldpred_file_2 = expand(project_dir + ldpred_output_dir + "target_data/{nonimp_name}_2.txt", nonimp_name = TARGET_non_imputed_files),
+		ldpred_file_3 = expand(project_dir + ldpred_output_dir + "target_data/{nonimp_name}_3.txt", nonimp_name = TARGET_non_imputed_files),
+		ldpred_file_4 = expand(project_dir + ldpred_output_dir + "target_data/{nonimp_name}_4.txt", nonimp_name = TARGET_non_imputed_files),
+
+		bk_file_external = expand(project_dir + "data/{ext_name}.bk", ext_nonimp_name = EXTERNAL_non_imputed_file),
+		rds_file_external = expand(project_dir + "data/{ext_name}.rds", ext_nonimp_name = EXTERNAL_non_imputed_file),
+
+		ldpred_file_1_external = expand(project_dir + ldpred_output_dir + "external_data/{ext_name}_1.txt", ext_nonimp_name = EXTERNAL_non_imputed_file),
+		ldpred_file_2_external = expand(project_dir + ldpred_output_dir + "external_data/{ext_name}_2.txt", ext_nonimp_name = EXTERNAL_non_imputed_file),
+		ldpred_file_3_external = expand(project_dir + ldpred_output_dir + "external_data/{ext_name}_3.txt", ext_nonimp_name = EXTERNAL_non_imputed_file),
+		ldpred_file_4_external = expand(project_dir + ldpred_output_dir + "external_data/{ext_name}_4.txt", ext_nonimp_name = EXTERNAL_non_imputed_file),
+		
+		plink_prs = project_dir + comparison_output_dir + "best_prs_plink.txt",
+		prsice_prs = project_dir + comparison_output_dir + "best_prs_prsice.txt",
+		lasso_prs = project_dir + comparison_output_dir + "best_prs_lassosum.txt",
+		ldpred_prs = project_dir + comparison_output_dir + "best_prs_LDpred.txt",
+
+		best_prs = project_dir + comparison_output_dir + "best_prs_all.txt",
+		best_thr = project_dir + comparison_output_dir + "best_thr_all.txt",
+
+		boxplot = project_dir + comparison_output_dir + "boxplot.pdf",
+		rocplot = project_dir + comparison_output_dir + "ROC_plot.pdf",
+		auc_plot = project_dir + comparison_output_dir + "AUC_plot.pdf",
+		auc_file = project_dir + comparison_output_dir + "performance_metrics_auc.txt",
+		rsqr_plot = project_dir + comparison_output_dir + "Rsqr_plot.pdf",
+		rsqr_file = project_dir + comparison_output_dir + "performance_metrics_rsqr.txt",
+
+rule clump:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS = GWAS_file), 
+	params:
+		b_files = project_dir + "data/{target_name}",
+		output_prefix = project_dir + plink_output_dir + "target_data/{target_name}",
+		snps = snp_col,
+		pval = p_value_col,
+	output: 
+		clumped = project_dir + plink_output_dir + "target_data/{target_name}.clumped",
+	shell:
+		'''
+		plink \
+			--bfile {params.b_files} \
+			--clump-p1 1 \
+			--clump-r2 0.1 \
+			--clump-kb 250 \
+			--clump {input.sum_stats} \
+			--clump-snp-field {params.snps} \
+			--clump-field {params.pval} \
+			--allow-no-sex \
+			--out {params.output_prefix}
+		'''
+
+rule clump_external:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS = GWAS_file), 
+	params:
+		b_files = project_dir + "data/{ext_name}",
+		output_prefix = project_dir + plink_output_dir + "external_data/{ext_name}",
+		snps = snp_col,
+		pval = p_value_col,
+	output: 
+		clumped_ex = project_dir + plink_output_dir + "external_data/{ext_name}.clumped",
+	shell:
+		'''
+		plink \
+			--bfile {params.b_files} \
+			--clump-p1 1 \
+			--clump-r2 0.1 \
+			--clump-kb 250 \
+			--clump {input.sum_stats} \
+			--clump-snp-field {params.snps} \
+			--clump-field {params.pval} \
+			--allow-no-sex \
+			--out {params.output_prefix}
+		'''
+
+rule extract_index:
+	input:
+		clump = project_dir + plink_output_dir + "target_data/{target_name}.clumped", 
+	output: 
+		snp =  project_dir + plink_output_dir + "target_data/{target_name}.valid.snp",
+	shell:
+		'''
+		awk 'NR!=1{{print $3}}' {input.clump} >  {output.snp}
+		'''
+
+rule extract_index_external:
+	input:
+		clumped_ex = project_dir + plink_output_dir + "external_data/{ext_name}.clumped", 
+	output: 
+		snp_ex =  project_dir + plink_output_dir + "external_data/{ext_name}.valid.snp",
+	shell:
+		'''
+		awk 'NR!=1{{print $3}}' {input.clumped_ex} >  {output.snp_ex}
+		'''
+
+rule snp_pvalue:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS = GWAS_file), 
+	params:
+		p_val = p_value_col,
+		snp = snp_col 
+	output: 
+		pvalue =  project_dir + plink_output_dir + "target_data/SNP.pvalue",
+	shell:
+		'''
+		awk 'NR==1 {{for (i=1; i<=NF; i++) {{f[$i] = i}}}}{{ print $(f["{params.snp}"]), $(f["{params.p_val}"]) }}' {input.sum_stats} > {output.pvalue}
+		'''
+
+rule snp_pvalue_external:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS = GWAS_file), 
+	params:
+		p_val = p_value_col,
+		snp = snp_col 
+	output: 
+		pvalue_ex =  project_dir + plink_output_dir + "external_data/SNP.pvalue",
+	shell:
+		'''
+		awk 'NR==1 {{for (i=1; i<=NF; i++) {{f[$i] = i}}}}{{ print $(f["{params.snp}"]), $(f["{params.p_val}"]) }}' {input.sum_stats} > {output.pvalue_ex}
+		'''
+
+rule range_file:
+	params:
+		ranges = pval_thresholds,
+	conda:
+		project_dir + "conda_env/ibp_2022_r_env.yml"
+	output:
+		range_file =  project_dir + plink_output_dir + "target_data/range_list",
+	script:
+		"range_parser.R"
+
+rule range_file_ex:
+	params:
+		ranges = pval_thresholds,
+	conda:
+		project_dir + "conda_env/ibp_2022_r_env.yml"
+	output:
+		range_file_ex =  project_dir + plink_output_dir + "external_data/range_list",
+	script:
+		"range_parser.R"        
+
+rule plink_score_file:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS = GWAS_file), 
+	params:
+		allele = effect_allele,
+		snp = snp_col, 
+		effect = beta_col,
+	output: 
+		new_stats =  project_dir + plink_output_dir + "target_data/condensed.GWAS.stats",
+	shell:
+		'''
+		awk 'NR==1 {{for (i=1; i<=NF; i++) {{f[$i] = i}}}}{{ print $(f["{params.snp}"]), $(f["{params.allele}"]), $(f["{params.effect}"]) }}' {input.sum_stats} > {output.new_stats}
+		'''
+
+rule plink_score_file_ex:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS = GWAS_file), 
+	params:
+		allele = effect_allele,
+		snp = snp_col, 
+		effect = beta_col,
+	output: 
+		new_stats_ex =  project_dir + plink_output_dir + "external_data/condensed.GWAS.stats",
+	shell:
+		'''
+		awk 'NR==1 {{for (i=1; i<=NF; i++) {{f[$i] = i}}}}{{ print $(f["{params.snp}"]), $(f["{params.allele}"]), $(f["{params.effect}"]) }}' {input.sum_stats} > {output.new_stats_ex}
+		'''
+
+rule plink_score:
+	input:
+		short_stats = project_dir + plink_output_dir + "target_data/condensed.GWAS.stats",
+		snp_pval = project_dir + plink_output_dir + "target_data/SNP.pvalue",
+		valid_snps =  project_dir + plink_output_dir + "target_data/{target_name}.valid.snp",
+		range = project_dir + plink_output_dir + "target_data/range_list",
+	params:
+		bfile = project_dir + plink_output_dir + "target_data/" +  TARGET_files,
+		bfile_dir = project_dir + "data/{target_name}"
+	output: 
+		status =  project_dir  + plink_output_dir + "target_data/{target_name}_prs_status",
+	shell:
+		'''
+		plink \
+			--bfile {params.bfile_dir} \
+			--score {input.short_stats} header \
+			--q-score-range {input.range} {input.snp_pval} header \
+			--extract {input.valid_snps} \
+			--allow-no-sex \
+			--out {params.bfile}
+		echo "prs generation complete" > {output.status}
+		'''   
+
+rule plink_score_ex:
+	input:
+		short_stats = project_dir + plink_output_dir + "external_data/condensed.GWAS.stats",
+		snp_pval = project_dir + plink_output_dir + "external_data/SNP.pvalue",
+		valid_snps =  project_dir + plink_output_dir + "external_data/{ext_name}.valid.snp",
+		range = project_dir + plink_output_dir + "external_data/range_list",
+	params:
+		bfile = project_dir + plink_output_dir + "external_data/" +  EXTERNAL_file,
+		bfile_dir = project_dir + "data/{ext_name}"
+	output: 
+		status_ex =  project_dir  + plink_output_dir + "external_data/{ext_name}_prs_status",
+	shell:
+		'''
+		plink \
+			--bfile {params.bfile_dir} \
+			--score {input.short_stats} header \
+			--q-score-range {input.range} {input.snp_pval} header \
+			--extract {input.valid_snps} \
+			--allow-no-sex \
+			--out {params.bfile}
+		echo "prs generation complete" > {output.status_ex}
+		'''  
+
+rule covariates:
+	input:
+		cov = project_dir + "data/{target_name}.cov",
+		eigenvec = project_dir + "data/{target_name}.eigenvec",
+	params:
+		b_files = project_dir + "data/{target_name}",
+	output:
+		covariates = project_dir + "data/{target_name}.covariate",
+	script:
+		"covariates.R"
+
+rule prsice_target:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS=GWAS_file),
+		phenos = expand(project_dir + "data/{pheno_name}", pheno_name=PHENO_file),
+		covariates = project_dir + "data/{target_name}.covariate",
+	params:
+		prsice_R = project_dir + "prsice/PRSice.R",
+		prsice_linux = project_dir + "prsice/PRSice_linux",
+		b_files = project_dir + "data/{target_name}",
+		output_prefix = project_dir + prsice_output_dir + "target_data/{target_name}",
+		snps = snp_col,
+		noneff_allele = noneffect_allele,
+		eff_allele = effect_allele,
+		chromo = chromosome_col,
+		pos = pos_col,
+		beta = beta_col,
+		pval = p_value_col,
+		maf = maf_value,
+		info = info_value,
+		thresholds = pval_thresholds,
+		binary = binary_pheno,
+	output:
+		snp_list = project_dir + prsice_output_dir + "target_data/{target_name}.snp",
+		prsice = project_dir + prsice_output_dir + "target_data/{target_name}.prsice",
+		all_score_target = project_dir + prsice_output_dir + "target_data/{target_name}.all_score",
+		
+	shell:
+		'''
+		Rscript {params.prsice_R} \
+			--prsice {params.prsice_linux} \
+			--base {input.sum_stats} \
+			--target {params.b_files} \
+			--pheno {input.phenos} \
+			--cov {input.covariates} \
+			--binary-target {params.binary} \
+			--ignore-fid \
+			--base-maf MAF:{params.maf} \
+			--base-info INFO:{params.info} \
+			--snp {params.snps} \
+			--chr {params.chromo} \
+			--bp {params.pos} \
+			--A1 {params.eff_allele} \
+			--A2 {params.noneff_allele} \
+			--stat {params.beta} \
+			--beta \
+			--pvalue {params.pval} \
+			--clump-kb 250 \
+			--clump-p 1.000000 \
+			--clump-r2 0.100000 \
+			--bar-levels {params.thresholds} \
+			--fastscore \
+			--no-regress \
+			--all-score \
+			--print-snp \
+			--out {params.output_prefix}
+		'''
+
+rule prsice_external:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS=GWAS_file),
+		phenos = expand(project_dir + "data/{pheno_name}", pheno_name=PHENO_file),
+		covariates = expand(project_dir + "data/{target_name}.covariate", target_name=TARGET_files),
+		snp_list = expand(project_dir + prsice_output_dir + "target_data/{target_name}.snp", target_name=TARGET_files),
+	params:
+		prsice_R = project_dir + "prsice/PRSice.R",
+		prsice_linux = project_dir + "prsice/PRSice_linux",
+		b_files = project_dir + "data/{ext_name}",
+		output_prefix = project_dir + prsice_output_dir + "external_data/{ext_name}",
+		snps = snp_col,
+		noneff_allele = noneffect_allele,
+		eff_allele = effect_allele,
+		chromo = chromosome_col,
+		pos = pos_col,
+		beta = beta_col,
+		pval = p_value_col,
+		maf = maf_value,
+		info = info_value,
+		thresholds = pval_thresholds,
+		binary = binary_pheno
+	output:
+		all_score_external = project_dir + prsice_output_dir + "external_data/{ext_name}.all_score",
+	shell:
+		'''
+		Rscript {params.prsice_R} \
+			--prsice {params.prsice_linux} \
+			--base {input.sum_stats} \
+			--target {params.b_files} \
+			--pheno {input.phenos} \
+			--cov {input.covariates} \
+			--binary-target {params.binary} \
+			--ignore-fid \
+			--base-maf MAF:{params.maf}\
+			--base-info INFO:{params.info} \
+			--snp {params.snps} \
+			--chr {params.chromo} \
+			--bp {params.pos} \
+			--A1 {params.eff_allele} \
+			--A2 {params.noneff_allele} \
+			--stat {params.beta} \
+			--beta \
+			--pvalue {params.pval} \
+			--bar-levels {params.thresholds} \
+			--fastscore \
+			--no-regress \
+			--all-score \
+			--extract {input.snp_list} \
+			--no-clump \
+			--out {params.output_prefix}
+		'''
+
+rule lasso_target:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS=GWAS_file),
+		covar =  project_dir + "data/{target_name}.cov",
+		pcs = project_dir + "data/{target_name}.eigenvec",
+		phenos = expand(project_dir + "data/{pheno_name}", pheno_name=PHENO_file),
+	params:
+		b_files = project_dir + "data/{target_name}",
+		thresholds = lasso_thresholding_values,
+		ref_genome = genome_build,
+		noneff_allele = noneffect_allele,
+		eff_allele = effect_allele,
+		chr = chromosome_col,
+		pos = pos_col,
+		beta = beta_col,
+		p_value = p_value_col,
+	conda:
+		project_dir + "conda_env/lasso_sum.yml"
+	output:
+		valid_plot = project_dir + lasso_output_dir + "target_data/{target_name}_validation_plot.pdf",
+		top_s = project_dir + lasso_output_dir + "target_data/{target_name}_best_s_val.txt", 
+		top_lambda = project_dir + lasso_output_dir + "target_data/{target_name}_best_lambda_val.txt",
+		prs_res = project_dir + lasso_output_dir + "target_data/{target_name}_prs_results.txt", 
+		valid_table = project_dir + lasso_output_dir + "target_data/{target_name}_validation_table.txt",
+		ranked_table = project_dir + lasso_output_dir + "target_data/{target_name}_validation_table_ranked.txt",        
+		prs_lasso1 = project_dir + lasso_output_dir + "target_data/{target_name}_prs_lasso1.txt", 
+		prs_lasso2 = project_dir + lasso_output_dir + "target_data/{target_name}_prs_lasso2.txt", 
+		prs_lasso3 = project_dir + lasso_output_dir + "target_data/{target_name}_prs_lasso3.txt", 
+		prs_lasso4 = project_dir + lasso_output_dir + "target_data/{target_name}_prs_lasso4.txt", 
+		r_sqrd = project_dir + lasso_output_dir + "target_data/{target_name}_max_r_sqr.txt",
+	script:
+		"LassoSumTarget.R"
+
+rule lasso_external:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS=GWAS_file),
+		valid_tab_ranked = expand(project_dir + lasso_output_dir + "target_data/{target_name}_validation_table_ranked.txt",target_name=TARGET_files),
+	params:
+		b_files = expand(project_dir + "data/{ext_name}", ext_name = EXTERNAL_file),
+		thresholds = lasso_thresholding_values,
+		ref_genome = genome_build,
+		noneff_allele = noneffect_allele,
+		eff_allele = effect_allele,
+		chr = chromosome_col,
+		pos = pos_col,
+		beta = beta_col,
+		p_value = p_value_col,
+	conda:
+		project_dir + "conda_env/lasso_sum.yml"
+	output:        
+		prs_lasso1_ext = project_dir + lasso_output_dir + "external_data/{ext_name}_prs_lasso1_external.txt", 
+		prs_lasso2_ext = project_dir + lasso_output_dir + "external_data/{ext_name}_prs_lasso2_external.txt", 
+		prs_lasso3_ext = project_dir + lasso_output_dir + "external_data/{ext_name}_prs_lasso3_external.txt", 
+		prs_lasso4_ext = project_dir + lasso_output_dir + "external_data/{ext_name}_prs_lasso4_external.txt", 
+	script:
+		"LassoSumExternal.R"
+
+
+rule get_files:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS=GWAS_file),
+		covar =  project_dir + "data/{target_name}.cov",
+		pcs = project_dir + "data/{target_name}.eigenvec",
+		phenos = expand(project_dir + "data/{PHENO}", PHENO=PHENO_file),
+		bed_file = project_dir + "data/{target_name}.bed",
+	conda:
+		project_dir + "conda_env/ldpred.yml"
+	output:
+		bk_file = project_dir + "data/{nonimp_name}.bk",
+		rds_file = project_dir + "data/{nonimp_name}.rds",
+
+	script:
+		"ldpred_part1.R" 
+
+rule LDpred_target:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS=GWAS_file),
+		covar = project_dir + "data/{target_name}.cov",
+		pcs = project_dir + "data/{target_name}.eigenvec",
+		phenos = expand(project_dir + "data/{pheno_name}", pheno_name=PHENO_file),
+		rds_file = project_dir + "data/{target_name}.rds",
+		bk_file = project_dir + "data_julia/{target_name}.bk",
+	params:
+		b_files = project_dir + "data/{target_name}",
+		snps = snp_col,
+		noneff_allele = noneffect_allele,
+		eff_allele = effect_allele,
+		chromo = chromosome_col,
+		pos = pos_col,
+		beta = beta_col,
+		pval = p_value_col,
+		thresholds = LDpred_num_pvales,
+	conda:
+		project_dir + "conda_env/ldpred.yml"
+	output:
+		ldpred_file_1 = project_dir + ldpred_output_dir + "target_data/{nonimp_name}_1.txt",
+		ldpred_file_2 = project_dir + ldpred_output_dir + "target_data/{nonimp_name}_2.txt",
+		ldpred_file_3 = project_dir + ldpred_output_dir + "target_data/{nonimp_name}_3.txt",
+		ldpred_file_4 = project_dir + ldpred_output_dir + "target_data/{nonimp_name}_4.txt",
+	script:
+		"ldpred_part2.R"
+
+rule get_files_external:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS=GWAS_file),
+		covar =  project_dir + "data/{target_name}.cov",
+		pcs = project_dir + "data/{target_name}.eigenvec",
+		phenos = expand(project_dir + "data/{PHENO}", PHENO=PHENO_file),
+		bed_file = project_dir + "data/{ext_name}.bed",
+	conda:
+		project_dir + "conda_env/ldpred.yml"
+	output:
+		bk_file_external = project_dir + "data/{ext_name}.bk",
+		rds_file_external = project_dir + "data/{ext_name}.rds",
+	script:
+		"ldpred_part1.R"
+
+rule LDpred_external:
+	input:
+		sum_stats = expand(project_dir + "data/{GWAS}", GWAS=GWAS_file),
+		covar = project_dir + "data/{target_name}.cov",
+		pcs = project_dir + "data/{target_name}.eigenvec",
+		phenos = expand(project_dir + "data/{pheno_name}", pheno_name=PHENO_file),
+		rds_file = project_dir + "data/{ext_name}.rds",
+		bk_file = project_dir + "data_julia/{ext_name}.bk",
+	params:
+		b_files = project_dir + "data/{ext_name}",
+		snps = snp_col,
+		noneff_allele = noneffect_allele,
+		eff_allele = effect_allele,
+		chromo = chromosome_col,
+		pos = pos_col,
+		beta = beta_col,
+		pval = p_value_col,
+		thresholds = LDpred_num_pvales,
+	conda:
+		project_dir + "conda_env/ldpred.yml"
+	output:
+		ldpred_file_1_external = project_dir + ldpred_output_dir + "external_data/{ext_name}_1.txt",
+		ldpred_file_2_external = project_dir + ldpred_output_dir + "external_data/{ext_name}_2.txt",
+		ldpred_file_3_external = project_dir + ldpred_output_dir + "external_data/{ext_name}_3.txt",
+		ldpred_file_4_external = project_dir + ldpred_output_dir + "external_data/{ext_name}_4.txt",
+	script:
+		"ldpred_part2.R"
+
+
+rule get_best_prs:
+	input:
+		range_file =  project_dir + plink_output_dir + "target_data/range_list",
+		phenos = expand(project_dir + "data/{pheno_name}", pheno_name=PHENO_file),
+		eigenvec = project_dir + "data/" + TARGET_files + ".eigenvec",
+	params:
+		project_dir = project_dir,
+		plink_dir = plink_output_dir,
+		prsice_dir = prsice_output_dir,
+		lasso_dir = lasso_output_dir,
+		ldpred_dir = ldpred_output_dir,
+		target_prefix = TARGET_files,
+		ext_prefix = EXTERNAL_file,
+		pval_thresholds = pval_thresholds,
+	conda:
+		project_dir + "conda_env/ibp_2022_r_env.yml"
+	output:
+		plink_prs = project_dir + comparison_output_dir + "best_prs_plink.txt",
+		prsice_prs = project_dir + comparison_output_dir + "best_prs_prsice.txt",
+		lasso_prs = project_dir + comparison_output_dir + "best_prs_lassosum.txt",
+		ldpred_prs = project_dir + comparison_output_dir + "best_prs_LDpred.txt",
+		best_thr = project_dir + comparison_output_dir + "best_thr_all.txt",
+	script:
+		"imp_only_best_plots.R"
+
+
+rule performance_metrics:
+	input:
+		plink_prs = project_dir + comparison_output_dir + "best_prs_plink.txt",
+		prsice_prs = project_dir + comparison_output_dir + "best_prs_prsice.txt",
+		lasso_prs = project_dir + comparison_output_dir + "best_prs_lassosum.txt",
+		ldpred_prs = project_dir + comparison_output_dir + "best_prs_LDpred.txt",
+	params:
+		project_dir = project_dir,
+		target_prefix = TARGET_files,
+	conda:
+		project_dir + "conda_env/ibp_2022_r_env.yml"
+	output:
+		best_prs = project_dir + comparison_output_dir + "best_prs_all.txt",
+		boxplot = project_dir + comparison_output_dir + "boxplot.pdf",
+		rocplot = project_dir + comparison_output_dir + "ROC_plot.pdf",
+		auc_plot = project_dir + comparison_output_dir + "AUC_plot.pdf",
+		auc_file = project_dir + comparison_output_dir + "performance_metrics_auc.txt",
+		rsqr_plot = project_dir + comparison_output_dir + "Rsqr_plot.pdf",
+		rsqr_file = project_dir + comparison_output_dir + "performance_metrics_rsqr.txt",
+	script:
+		"imp_only_performance_plots.R"

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+#PBS -l nodes=1:ppn=4
+#PBS -l walltime=10:00:00
+#PBS -l pmem=40gb
+#PBS -A lp_edu_bioinformatics_2122
+
+
+cd ~
+cd /staging/leuven/stg_00092/IBP_PRSproject/1_Intestinal_Bowel_Disease/PRS_pipeline_binary_phenotypes/scripts/
+
+module purge
+eval "$(conda shell.bash hook)"
+conda activate $VSC_DATA/miniconda3/envs/snakemake_PRS
+
+snakemake -s imp_only_snakefile --cores 4 --use-conda
