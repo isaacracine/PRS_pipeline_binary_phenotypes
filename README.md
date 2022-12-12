@@ -1,7 +1,7 @@
 # <ins>PRS pipeline for binary phenotypes</ins>
 This repository will host the pipeline and necessary files to calculate and compare PRS for multiple tools  (implemented via snakemake)
 
-With this pipeline, we calculate polygenic risk scores (PRS) using four different PRS-calculating tools (PLINK, PRSice, lassosum ans LDpred). Additively, we compare the calculated PRS of each method to eachother. 
+With this pipeline, we calculate polygenic risk scores (PRS) using four different PRS-calculating tools (PLINK, PRSice, lassosum and LDpred). Additively, we compare the calculated PRS of each method to eachother. 
 
 This project aims to compare four different tools that calculate Polygenic Risk Scores (PRS). These tools are PLINK, PRSice, Lassosum and LDpred. Currently, this workflow only allows for testing of **binary** phenotypes, such as cases and controls.
 
@@ -12,7 +12,7 @@ _If you are working in a shared remote directory, remember to give access to the
 ## <ins>PREVIOUS REQUIREMENTS:</ins>
 
 * Conda
-* The GWAS base dataset should contain uppercase alleles. 
+* The GWAS base dataset should contain uppercase alleles.
 * We require that you have the effect size in beta metric rather than odds ratio. To obtain the beta estimate from an odds ratio we recommend using R. 
 
 ```
@@ -38,22 +38,21 @@ git clone https://github.com/jcasadogp/IBP_PRS_2022.git
 * The command is NOT CLONE, because I have been able to edit a push changes from local, and we don't want that.
 
 It includes the following folders:
-* Conda environments: several .yml files that will be used by the different scripts to activate the contained conda environments. These .yml files are what allows for the running of lassosum, LDpred and generation of performance metric plots.
-* plink: installation and executable files for PLINK
-* prsice: installation, executable and R script for PRSice
-* r_scripts: it contains several R scripts that are used in the project 
-* snakemake: it contains the global Snakefile that will run the four tools as well as the job file (.pbs) that must be run by the user.
+* Conda environments: several .yml files that will be used by the different scripts to activate the contained conda environments. These .yml files are what allows for the running of snakefile, lassosum, LDpred and generation of performance metric plots.
+* plink: installation and executable files for PLINK.
+* prsice: installation, executable and R script for PRSice.
+* scripts: it contains three types of files: R scripts, Snakefiles and the SLURM jobs' files that must be run by the user.
 
 
 ## <ins>OVERVIEW: </ins>
 
 During development we stumbled across a problem implementing LDpred due to its drastically large memory requirements. Therefore, we developed two pipelines within this repository, one with and without LDpred. If the user would like to use the pipeline with LDpred they must also have a either a **small dataset** or access to the **unimputed data**. If either of these expectations are not met then the user will likely not have sufficient resources. 
 
-Therefore, the structure of the `scripts` directory is as follows:
-* snakemake_LDpred: the snakemake (pipeline) which runs LDpred
-* snakemake_imputed: the snakemake (pipeline) which does no run run LDpred
+Therefore, the `scripts`directory contains the following Snakefiles and .pbs files:
 * LD_pred_all.pbs: SLURM job requierd for running snakemake_LDpred
+* LD_pred_all_snakefile: the snakemake (pipeline) which runs LDpred
 * imp_only.pbs: SLURM job required for running snakemake_imputed 
+* imp_only_snakefile: the snakemake (pipeline) which does no run run LDpred
 
 
 ## <ins>INPUT DATA:</ins>
@@ -80,7 +79,7 @@ plink \
 All this data will be placed in the `data/` directory. To create it run:
 
 ```
-cd IBP_PRS_2022
+cd PRS_pipeline_binary_phenotypes/
 mkdir data/
 cp <target_files> data/
 ```
@@ -90,7 +89,7 @@ cp <target_files> data/
 We require the user to create a conda environment for running snakemake. This is to prevent issues with different versions of snakemake.
 
 ```
-cd IBP_PRS_2022/conda_env/
+cd PRS_pipeline_binary_phenotypes/conda_env/
 conda env create -f snakemake_PRS.yml
 ```
 
@@ -126,8 +125,8 @@ Snakemake is a wonderful workflow engine which allows for easy adaptability and 
 snakemake_imputed:
 ```
 # === Prefix of the files  ===
-TARGET_files = "IBD_GSA_fin" #prefix of target file
-EXTERNAL_file = "1000G_EUR_fin" #prefix of external (1000 Genomes) file
+TARGET_files = "IBD_GSA_fin_maf" #prefix of target file
+EXTERNAL_file = "1000G_EUR_fin_maf" #prefix of external (1000 Genomes) file
 GWAS_file = "GWAS_summary_stats.txt" #summary statistics file
 PHENO_file = "final_phenotypes.txt" #phenotype file
 # === Parameters for tools ===
@@ -146,16 +145,17 @@ info_value = "0.8"
 binary_pheno = "T" #indicate if the phenotype is a binary trait or not. Values: "T" or "F"
 ```
 
-snakemake_LDpred: in addition to the above specified variables you will also one last varibale to specify
+LD_pred_all_snakefile: in addition to the above specified variables you will also one last varibale to specify
 ```
-unimputed_target_files = "IBD_GSA_fin_unimputed #prefix of the unimputed dataset
-LDpred_num_pvales = 4 #must be a positive integer, but we recommend no more than 4 for run time 
+TARGET_non_imputed_files = "IBD_GSA_fin_maf" #prefix of the non imputed target file
+EXTERNAL_non_imputed_file = "1000G_EUR_fin_maf" #prefix of external (1000 Genomes) non imputed file
+LDpred_num_pvales = 1 #must be a positive integer, but we recommend no more than 4 for run time 
 ```
 
 
 The user should provide the file names and column names as above. The thresholding and shrinkage parameters can be adapted to allow for more niche testing.
 
-The more thresholds, shrinkage parameters and p-values for LDpred that are tested the longer the pipeline will need. It's estimated that the snakemake_imputed script will take around 6 hours, while the snakemake_LDpred will likely take more than 24 hours to run.
+The more thresholds, shrinkage parameters and p-values for LDpred that are tested the longer the pipeline will need. It's estimated that the imp_only_snakefile script will take around 6 hours, while the LD_pred_all_snakefile will likely take more than 24 hours to run.
 
 ## <ins>ADAPTING THE SLURM JOB SCRIPT:</ins>
 
@@ -169,14 +169,14 @@ We recomend the user allote at least 10 hours for the pipeline to run as the shr
 #PBS -l nodes=1:ppn=4
 #PBS -l walltime=10:00:00
 #PBS -l pmem=40gb
-#PBS -A <account>
+#PBS -A lp_edu_bioinformatics_2122
 
 cd ~
 cd <directory_to_snakemake>
 module purge
 eval "$(conda shell.bash hook)"
 conda activate snakemake_PRS
-snakemake -s snakemake_imputed --cores 4 --use-conda
+snakemake -s imp_only_snakefile --cores 4 --use-conda
 ```
 
 <ins>LD_pred_all.pbs: </ins>
@@ -194,10 +194,10 @@ cd <directory_to_snakemake>
 module purge
 eval "$(conda shell.bash hook)"
 conda activate snakemake_PRS
-snakemake -s snakemake_LDpred --use-conda
+snakemake -s LD_pred_all_snakefile --cores 4 --use-conda
 ```
 
-Results of the pipeline will be written to log files. Check the error file to see if all the steps in the pipeline completed. If you have an error please first fimilarize yourself with snakemake (see sources). 
+Results of the pipeline will be written to log files. Check the error file to see if all the steps in the pipeline completed. If you have an error please first familarize yourself with Snakemake (see sources). 
 
 Once this is set up **CONGRADULATIONS**! You can now submit this job to your cluster's scheduler and patiently wait for your results. 
 
