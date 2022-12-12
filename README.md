@@ -1,4 +1,4 @@
-# <ins>PRS pipeline for binary phenotypes</ins>
+# <ins>PRS pipeline for binary phenotypes</ins> 
 This repository will host the pipeline and necessary files to calculate and compare PRS for multiple tools  (implemented via snakemake)
 
 With this pipeline, we calculate polygenic risk scores (PRS) using four different PRS-calculating tools (PLINK, PRSice, lassosum and LDpred). Additively, we compare the calculated PRS of each method to eachother. 
