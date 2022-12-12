@@ -38,10 +38,10 @@ git clone https://github.com/jcasadogp/IBP_PRS_2022.git
 * The command is NOT CLONE, because I have been able to edit a push changes from local, and we don't want that.
 
 It includes the following folders:
-* Conda environments: several .yml files that will be used by the different scripts to activate the contained conda environments. These .yml files are what allows for the running of snakefile, lassosum, LDpred and generation of performance metric plots.
-* plink: installation and executable files for PLINK.
-* prsice: installation, executable and R script for PRSice.
-* scripts: it contains three types of files: R scripts, Snakefiles and the SLURM jobs' files that must be run by the user.
+* Conda environments (`PRS_pipeline_binary_phenotypes/conda_env/`): several .yml files that will be used by the different scripts to activate the contained conda environments. These .yml files are what allows for the running of snakefile, lassosum, LDpred and generation of performance metric plots.
+* Plink (`PRS_pipeline_binary_phenotypes/plink/`): installation and executable files for PLINK.
+* Prsice (`PRS_pipeline_binary_phenotypes/prsice/`): installation, executable and R script for PRSice.
+* Scripts (`PRS_pipeline_binary_phenotypes/scripts/`): it contains three types of files: R scripts, Snakefiles and the SLURM jobs' files that must be run by the user.
 
 
 ## <ins>OVERVIEW: </ins>
@@ -49,10 +49,10 @@ It includes the following folders:
 During development we stumbled across a problem implementing LDpred due to its drastically large memory requirements. Therefore, we developed two pipelines within this repository, one with and without LDpred. If the user would like to use the pipeline with LDpred they must also have a either a **small dataset** or access to the **unimputed data**. If either of these expectations are not met then the user will likely not have sufficient resources. 
 
 Therefore, the `scripts`directory contains the following Snakefiles and .pbs files:
-* LD_pred_all.pbs: SLURM job requierd for running snakemake_LDpred
-* LD_pred_all_snakefile: the snakemake (pipeline) which runs LDpred
-* imp_only.pbs: SLURM job required for running snakemake_imputed 
-* imp_only_snakefile: the snakemake (pipeline) which does no run run LDpred
+* `LD_pred_all.pbs`: SLURM job requierd for running snakemake_LDpred
+* `LD_pred_all_snakefile`: the snakemake (pipeline) which runs LDpred
+* `imp_only.pbs`: SLURM job required for running snakemake_imputed 
+* `imp_only_snakefile`: the snakemake (pipeline) which does no run run LDpred
 
 
 ## <ins>INPUT DATA:</ins>
