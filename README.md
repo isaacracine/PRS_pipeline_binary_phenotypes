@@ -1,4 +1,4 @@
-# PRS pipeline for binary phenotypes
+# <ins>PRS pipeline for binary phenotypes</ins>
 This repository will host the pipeline and necessary files to calculate and compare PRS for multiple tools  (implemented via snakemake)
 
 With this pipeline, we calculate polygenic risk scores (PRS) using four different PRS-calculating tools (PLINK, PRSice, lassosum ans LDpred). Additively, we compare the calculated PRS of each method to eachother. 
@@ -9,9 +9,10 @@ The heart of this project is a Snakemake script, therefore allowing for extensio
 
 _If you are working in a shared remote directory, remember to give access to the other members after creating any file or directory._
 
-## PREVIOUS REQUIREMENTS
+## <ins>PREVIOUS REQUIREMENTS:</ins>
 
 * Conda
+* The GWAS base dataset should contain uppercase alleles. 
 * We require that you have the effect size in beta metric rather than odds ratio. To obtain the beta estimate from an odds ratio we recommend using R. 
 
 ```
@@ -20,7 +21,7 @@ data$beta <- log(dat$OR)
 write.table(data, "<name_of_new_GWAS_summary_statisitcs_file>", quote=F, row.names=F)
 ```
 
-## DOWNLOAD THIS REPOSITORY
+## <ins>DOWNLOAD THIS REPOSITORY:</ins>
 
 In order to run this tool you have to download this GitHub repository.
 ```
@@ -44,7 +45,18 @@ It includes the following folders:
 * snakemake: it contains the global Snakefile that will run the four tools as well as the job file (.pbs) that must be run by the user.
 
 
-## INPUT DATA:
+## <ins>OVERVIEW: </ins>
+
+During development we stumbled across a problem implementing LDpred due to its drastically large memory requirements. Therefore, we developed two pipelines within this repository, one with and without LDpred. If the user would like to use the pipeline with LDpred they must also have a either a **small dataset** or access to the **unimputed data**. If either of these expectations are not met then the user will likely not have sufficient resources. 
+
+Therefore, the structure of the `scripts` directory is as follows:
+* snakemake_LDpred: the snakemake (pipeline) which runs LDpred
+* snakemake_imputed: the snakemake (pipeline) which does no run run LDpred
+* LD_pred_all.pbs: SLURM job requierd for running snakemake_LDpred
+* imp_only.pbs: SLURM job required for running snakemake_imputed 
+
+
+## <ins>INPUT DATA:</ins>
 
 Data needed:
 
@@ -57,7 +69,7 @@ Data needed:
 plink \
     --bfile <target_data_prefix> \
     --indep-pairwise 200 50 0.25 \ #can change these values (look at PLINK documentation for further explaination)
-    --out <target_data_prefic>
+    --out <target_data_prefix>
 plink \
     --bfile <target_data_prefix> \
     --extract <target_data_prefix>.prune.in \
@@ -65,7 +77,7 @@ plink \
     --out <target_data_prefix>
 ```
 
-All this data will be placed in the data/ directory. To create it run:
+All this data will be placed in the `data/` directory. To create it run:
 
 ```
 cd IBP_PRS_2022
@@ -73,7 +85,7 @@ mkdir data/
 cp <target_files> data/
 ```
 
-## MAKE A SNAKEMAKE CONDA ENVIRONMENT
+## <ins>MAKE A SNAKEMAKE CONDA ENVIRONMENT:</ins>
 
 We require the user to create a conda environment for running snakemake. This is to prevent issues with different versions of snakemake.
 
@@ -82,10 +94,10 @@ cd IBP_PRS_2022/conda_env/
 conda env create -f snakemake_PRS.yml
 ```
 
-Important: note down the directory in which the environment was created, you will need it to adapt the slurm job script.
+Important: note down the directory in which the environment was created, you will need it to adapt the slurm job script. This is often within your miniconda directory. 
 
 
-## OUTPUT DIRECTORY:
+## <ins>OUTPUT DIRECTORY:</ins>
 
 The output data will be placed in a directory called ```output_data/``` that contains a different directory per tool. Also, inside each of the tools' directories, we will separate the data into ```target_data/``` and ```external_data/```, depending on if it comes from the tool with the 1000genome data (```external_data/```) or from the target data (```target_data/```). To create all these directories run:
 
@@ -108,9 +120,10 @@ mkdir 004_LDpred/external_data/
 mkdir 005_comparison/
 ```
 
-## ADAPTING THE SNAKEMAKE FILE
+## <ins>ADAPTING THE SNAKEMAKE FILE:</ins>
 Snakemake is a wonderful workflow engine which allows for easy adaptability and extension. At the top of the script you will see several global variables, all of which you will need to fill in. They include the desired reference genome for a list of options, different p-value thresholds to test in PLINK and PRSice, different shrinkage values to test in lassosum and the names of specific columns from the GWAS summary statistic file. Here is an example:
 
+snakemake_imputed:
 ```
 # === Prefix of the files  ===
 TARGET_files = "IBD_GSA_fin" #prefix of target file
@@ -133,23 +146,29 @@ info_value = "0.8"
 binary_pheno = "T" #indicate if the phenotype is a binary trait or not. Values: "T" or "F"
 ```
 
+snakemake_LDpred: in addition to the above specified variables you will also one last varibale to specify
+```
+unimputed_target_files = "IBD_GSA_fin_unimputed #prefix of the unimputed dataset
+LDpred_num_pvales = 4 #must be a positive integer, but we recommend no more than 4 for run time 
+```
+
+
 The user should provide the file names and column names as above. The thresholding and shrinkage parameters can be adapted to allow for more niche testing.
 
-The more thresholds and shrinkage parameters that are tested the longer the pipeline will need, specially for lassosum.
+The more thresholds, shrinkage parameters and p-values for LDpred that are tested the longer the pipeline will need. It's estimated that the snakemake_imputed script will take around 6 hours, while the snakemake_LDpred will likely take more than 24 hours to run.
 
-## ADAPTING THE SLURM JOB SCRIPT
+## <ins>ADAPTING THE SLURM JOB SCRIPT:</ins>
 
-This pipeline was developed using the Vlaams Supercomputer Centrum and utilizes a SLURM job scheduler. The user should look into details about their own institution's cluster and scheduler.
+This pipeline was developed using the Vlaams Supercomputer Centrum and utilizes a SLURM job scheduler. The user should look into details about their own institution's cluster and scheduler. Begin your BASH script by setting the directory to the global snakemake file downloaded from this repository. Further, makesure you have created an envinroment from the `snakemake.yml` we provided as this will prevent version and dependcy issues.
 
-We recomend the user allote at least 24 hours for the pipeline to run as the shrinkage based methods are rather computationally intesive. This will avoid running into walltime issues. Further, these shrinkage tools require large amounts of data so do not be shy with the amount of data requested.
-
-Begin your BASH script by setting the directory to the global snakemake file downloaded from this repository. Further, makesure you have created an envinroment from the `snakemake.yml` we provided as this will prevent version and dependcy issues.
+<ins>imp_only.pbs: </ins>
+We recomend the user allote at least 10 hours for the pipeline to run as the shrinkage based methods are rather computationally intesive. This will avoid running into walltime issues. Further, these shrinkage tools require large amounts of data so do not be shy with the amount of data requested.
 
 ```
 #!/usr/bin/env bash
-#PBS -l nodes=1:ppn=1
-#PBS -l walltime=24:00:00
-#PBS -l pmem=120gb
+#PBS -l nodes=1:ppn=4
+#PBS -l walltime=10:00:00
+#PBS -l pmem=40gb
 #PBS -A <account>
 
 cd ~
@@ -157,28 +176,50 @@ cd <directory_to_snakemake>
 module purge
 eval "$(conda shell.bash hook)"
 conda activate snakemake_PRS
-snakemake -s Snakefile --cores 4 --use-conda
+snakemake -s snakemake_imputed --cores 4 --use-conda
 ```
 
-Once this is set up CONGRADULATIONS! You can now submit this job to your cluster's scheduler and patiently wait for your results. 
+<ins>LD_pred_all.pbs: </ins>
+To run the snakemake considering LDpred we strongly beleive access to a partition on your cluster that allows for very large memory allocation is needed, hence why we specified `#PBS -l pmem=720gb` and `#PBS -l partition = bigmem`. Therefore, its recommend to be aggressive with the amount of memory and the allocated wall time. Besides the header take care to pay attention to the name of the snakefile has also changed.
+```
+#!/usr/bin/env bash
+#PBS -l nodes=1:ppn=1
+#PBS -l walltime=30:00:00
+#PBS -l pmem=720gb
+#PBS -l partition = bigmem
+#PBS -A <account>
 
-## OUTPUT FILES
-Several intermediate files, files containing statistics and predicted PRS will be generated. Once again the user should focus their attention to the `005_comparison/` directory. This is because this directory will contain the useful plots comparing the performance of the tools. Once again, the PRS generated from these tools are **not** meant to be used directly for further analyses or publIshing, rather to help the user to select which tool will have the best performance on their dataset.
+cd ~
+cd <directory_to_snakemake>
+module purge
+eval "$(conda shell.bash hook)"
+conda activate snakemake_PRS
+snakemake -s snakemake_LDpred --use-conda
+```
 
-## OUTPUT PLOTS
+Results of the pipeline will be written to log files. Check the error file to see if all the steps in the pipeline completed. If you have an error please first fimilarize yourself with snakemake (see sources). 
+
+Once this is set up **CONGRADULATIONS**! You can now submit this job to your cluster's scheduler and patiently wait for your results. 
+
+## <ins>OUTPUT FILES:</ins>
+Several intermediate files, files containing statistics and predicted PRS will be generated. Once again the user should focus their attention to the `005_comparison/` directory. This is because this directory will contain the useful plots comparing the performance of the tools. It will also contain a .txt file consisiting of the best parameter values selected for each tool, `best_thr_all.txt`. Once again, the PRS generated from these tools are **not** meant to be used directly for further analyses or publIshing, rather to help the user to select which tool will have the best performance on their dataset.
+
+## <ins>OUTPUT PLOTS:</ins>
 Several plots will be generated for the prediction of PRS and comparison of the performance metrics across tools.
 * A boxplot containing the four tools will be generated comparing the cases and controls
 * A ROC curve will be generated to show how well the logistic model built from each tools PRS predictions is at correctly classifying cases and controls
 * Bar plots comparing the AUC and R<sup>2</sup> values across the tools, generated using 1000 bootstrap samples
 
-## WARNINGS
-The GWAS base dataset should contain uppercase alleles. Distuinguish affect allele vs non-affected allele. In our case A2 is the affected allele. 
+## <ins>WARNINGS:</ins>
 
-### MISSING PHENOTYPES
+### LDpred:
+Besides the issues with memory and imputation LDpred also has three different version available to run. We selected for the grid model because we can test specific p-value thresholds. Other implementations can be extended by adaptin the scripts. However, to not the auto model offered with take exceptionally long to time run.
+
+### MISSING PHENOTYPES:
 PLINK binary files use -9 to represent missing values, however these will not be considered as missing values in our pipeline given some of the tools used do not recognize -9 as missing. It is important to remove these individuals or phenotypes prior to running the pipeline. 
 
-### ADAPTING YOUR LOGISIC MODELS
-When calculating logistic models for explaining the phenotype from PRS results we do not account for principal components or covariates. Therefore, if you wish to include covariates in your logisitc regression you will have to manually adapt the R scripts. One R script, `global_best_plots.R`, decides the best PRS generated across the different thresholds tested. Another R script, `global_performance_plots.R`, produces the plots for comparing the tools. The principal components and covariates can be added by adapting the logisitc regression code as follows:
+### ADAPTING YOUR LOGISIC MODELS:
+When calculating logistic models for explaining the phenotype from PRS results we do not account for principal components or covariates. However, they are passed into the tools when calculating PRS. Our scripts only consider 6 PCs, therefore calculating more prior to the pipeline execution is okay but calculating fewer is **not**. TTherefore, if you wish to include covariates in your logisitc regression you will have to manually adapt the R scripts. One R script, `global_best_plots.R`, decides the best PRS generated across the different thresholds tested. Another R script, `global_performance_plots.R`, produces the plots for comparing the tools. The principal components and covariates can be added by adapting the logisitc regression code as follows:
 
 ```
 #original command
@@ -188,9 +229,9 @@ glm(phenos ~ <prs_column> + <pc_1> + <pc_2> + ... + <covariate_1>  + ... + <cova
 ```
 
 
-# SOURCES AND FURTHER POINTS OF REFERENCE 
+# <ins>SOURCES AND FURTHER POINTS OF REFERENCE:</ins> 
 
-If you find yourself stuck please refer to the necessary literature, repositories and websites which will add in typical PRS errors generated during analysis. Although this is meant to be an automated pipeline that does not mean one can use the pipeline without any thought, so be *cautious*. 
+If you find yourself stuck please refer to the necessary literature, repositories and websites. These will provide explainations for most of the errors obtainedduring the analysis. Although this is meant to be an automated pipeline that does not mean one can use the pipeline without any thought, so be *cautious*. 
 
 Berisa, T. & Pickrell, J. K. Approximately independent linkage disequilibrium blocks in human populations. Bioinformatics 32, 283-285 (2015).
 
