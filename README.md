@@ -63,7 +63,7 @@ Data needed:
 * GWAS summary statistics
 * 1000 genome file to use as reference, which should be a subset of the cohort that is of the same ancestral background as your target cohort
 * Target files: PLINK binary format files (.fam, .bed, .bim)
-* Phenotype file: File containing the phenotype file with FID, IID, and the pehnotype must be encoded as **1 for controls and 2 for cases**.
+* Phenotype file: File containing the phenotype file with FID, IID, and the phenotype must be encoded as **1 for controls and 2 for cases**.
 * Covariates and eigenvectos files (eigenvalues are not really necessary). To generate the eigenvector file you can must perform pruning first. Use the following commands:
 ```
 plink \
