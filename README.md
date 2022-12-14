@@ -23,19 +23,10 @@ write.table(data, "<name_of_new_GWAS_summary_statisitcs_file>", quote=F, row.nam
 
 ## <ins>DOWNLOAD THIS REPOSITORY:</ins>
 
-In order to run this tool you have to download this GitHub repository.
+In order to run this tool you have to download this GitHub repository. Then you can modify teh corresponding variables (explained later in this README.md file) and run it locally. In case you wanted to push it to your GitHub repositories, a fork will be automatically created, and if you wanted to propose any change you can submit a pull request.
 ```
-git clone https://github.com/jcasadogp/IBP_PRS_2022.git
+git clone [https://github.com/jcasadogp/IBP_PRS_2022.git](https://github.com/isaacracine/PRS_pipeline_binary_phenotypes.git)
 ```
-
-#### ERRORS or WARNINGS I GET WHEN I TRY ALL THESE COMMANDS:
-![Captura de pantalla 2022-12-01 a las 12 30 01](https://user-images.githubusercontent.com/80517901/205041802-03e42839-e716-4641-a418-c7e6643ef194.png)
-
-* We need to be careful with case-sensitive paths.
- 
-![Captura de pantalla 2022-12-01 a las 12 34 17](https://user-images.githubusercontent.com/80517901/205042720-ba0a9b6f-1aa9-4590-9637-c694f0f46711.png)
-
-* The command is NOT CLONE, because I have been able to edit a push changes from local, and we don't want that.
 
 It includes the following folders:
 * Conda environments (`PRS_pipeline_binary_phenotypes/conda_env/`): several .yml files that will be used by the different scripts to activate the contained conda environments. These .yml files are what allows for the running of snakefile, lassosum, LDpred and generation of performance metric plots.
