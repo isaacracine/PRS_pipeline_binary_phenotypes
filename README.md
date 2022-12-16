@@ -40,10 +40,10 @@ It includes the following folders:
 During development we stumbled across a problem implementing LDpred due to its drastically large memory requirements. Therefore, we developed two pipelines within this repository, one with and without LDpred. If the user would like to use the pipeline with LDpred they must also have a either a **small dataset** or access to the **unimputed data**. If either of these expectations are not met then the user will likely not have sufficient resources. 
 
 Therefore, the `scripts`directory contains the following Snakefiles and .pbs files:
-* `LD_pred_all.pbs`: SLURM job requierd for running snakemake_LDpred
-* `LD_pred_all_snakefile`: the snakemake (pipeline) which runs LDpred
-* `imp_only.pbs`: SLURM job required for running snakemake_imputed 
-* `imp_only_snakefile`: the snakemake (pipeline) which does no run run LDpred
+* `LD_pred_all.pbs`: SLURM job requierd for running ```LD_pred_all_snakefile```
+* `LD_pred_all_snakefile`: the snakemake (pipeline) which runs also LDpred
+* `imp_only.pbs`: SLURM job required for running ```imp_only_snakefile```
+* `imp_only_snakefile`: the snakemake (pipeline) which does not run LDpred
 
 
 ## <ins>INPUT DATA:</ins>
@@ -113,7 +113,7 @@ mkdir 005_comparison/
 ## <ins>ADAPTING THE SNAKEMAKE FILE:</ins>
 Snakemake is a wonderful workflow engine which allows for easy adaptability and extension. At the top of the script you will see several global variables, all of which you will need to fill in. They include the desired reference genome for a list of options, different p-value thresholds to test in PLINK and PRSice, different shrinkage values to test in lassosum and the names of specific columns from the GWAS summary statistic file. Here is an example:
 
-snakemake_imputed:
+imp_only_snakefile:
 ```
 # === Prefix of the files  ===
 TARGET_files = "IBD_GSA_fin_maf" #prefix of target file
@@ -136,17 +136,17 @@ info_value = "0.8"
 binary_pheno = "T" #indicate if the phenotype is a binary trait or not. Values: "T" or "F"
 ```
 
-LD_pred_all_snakefile: in addition to the above specified variables you will also one last varibale to specify
+LD_pred_all_snakefile: in addition to the above specified variables you will also have to adapt the following variables for running LDpred:
 ```
-TARGET_non_imputed_files = "IBD_GSA_fin_maf" #prefix of the non imputed target file
-EXTERNAL_non_imputed_file = "1000G_EUR_fin_maf" #prefix of external (1000 Genomes) non imputed file
+TARGET_ldpred_files = "IBD_GSA_fin_maf" #prefix of the non imputed target file
+EXTERNAL_ldpred_files = "1000G_EUR_fin_maf" #prefix of external (1000 Genomes) non imputed file
 LDpred_num_pvales = 1 #must be a positive integer, but we recommend no more than 4 for run time 
 ```
 
 
 The user should provide the file names and column names as above. The thresholding and shrinkage parameters can be adapted to allow for more niche testing.
 
-The more thresholds, shrinkage parameters and p-values for LDpred that are tested the longer the pipeline will need. It's estimated that the imp_only_snakefile script will take around 6 hours, while the LD_pred_all_snakefile will likely take more than 24 hours to run.
+The more thresholds, shrinkage parameters and p-values for LDpred that are tested the longer the pipeline will need. It's estimated that the ```imp_only_snakefile``` script will take around 6 hours, while the ```LD_pred_all_snakefile``` will likely take more than 24 hours to run.
 
 ## <ins>ADAPTING THE SLURM JOB SCRIPT:</ins>
 
@@ -163,7 +163,7 @@ We recomend the user allote at least 10 hours for the pipeline to run as the shr
 #PBS -A lp_edu_bioinformatics_2122
 
 cd ~
-cd <directory_to_snakemake>
+cd <directory_to_snakemake_file>
 module purge
 eval "$(conda shell.bash hook)"
 conda activate snakemake_PRS
@@ -171,7 +171,7 @@ snakemake -s imp_only_snakefile --cores 4 --use-conda
 ```
 
 <ins>LD_pred_all.pbs: </ins>
-To run the snakemake considering LDpred we strongly beleive access to a partition on your cluster that allows for very large memory allocation is needed, hence why we specified `#PBS -l pmem=720gb` and `#PBS -l partition = bigmem`. Therefore, its recommend to be aggressive with the amount of memory and the allocated wall time. Besides the header take care to pay attention to the name of the snakefile has also changed.
+To run the snakemake considering LDpred we strongly beleive access to a partition on your cluster that allows for very large memory allocation is needed, hence why we specified `#PBS -l pmem=720gb` and `#PBS -l partition = bigmem`. Therefore, it is recommended to be aggressive with the amount of memory and the allocated wall time. Besides the header take care to pay attention to the name of the snakefile has also changed.
 ```
 #!/usr/bin/env bash
 #PBS -l nodes=1:ppn=1
