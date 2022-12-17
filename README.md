@@ -138,8 +138,8 @@ binary_pheno = "T" #indicate if the phenotype is a binary trait or not. Values: 
 
 LD_pred_all_snakefile: in addition to the above specified variables you will also have to adapt the following variables for running LDpred:
 ```
-TARGET_ldpred_files = "IBD_GSA_fin_maf" #prefix of the non imputed target file
-EXTERNAL_ldpred_files = "1000G_EUR_fin_maf" #prefix of external (1000 Genomes) non imputed file
+TARGET_ldpred_files = "IBD_GSA_fin_maf" #prefix of the LDpred target file
+EXTERNAL_ldpred_files = "1000G_EUR_fin_maf" #prefix of external 1000 Genomes file
 LDpred_num_pvales = 1 #must be a positive integer, but we recommend no more than 4 for run time 
 ```
 
