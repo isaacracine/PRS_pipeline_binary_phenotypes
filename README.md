@@ -95,19 +95,19 @@ The output data will be placed in a directory called ```output_data/``` that con
 cd IBP_PRS_2022
 mkdir output_data/
 cd output_data/
-mkdir 001_plink/
-mkdir 001_plink/target_data/
-mkdir 001_plink/external_data/
-mkdir 002_prsice/
-mkdir 002_prsice/target_data/
-mkdir 002_prsice/external_data/
-mkdir 003_lassosum/
-mkdir 003_lassosum/target_data/
-mkdir 003_lassosum/external_data/
-mkdir 004_LDpred/
-mkdir 004_LDpred/target_data/
-mkdir 004_LDpred/external_data/
-mkdir 005_comparison/
+mkdir -p 001_plink/
+mkdir -p 001_plink/target_data/
+mkdir -p 001_plink/external_data/
+mkdir -p 002_prsice/
+mkdir -p 002_prsice/target_data/
+mkdir -p 002_prsice/external_data/
+mkdir -p 003_lassosum/
+mkdir -p 003_lassosum/target_data/
+mkdir -p 003_lassosum/external_data/
+mkdir -p 004_LDpred/
+mkdir -p 004_LDpred/target_data/
+mkdir -p 004_LDpred/external_data/
+mkdir -p 005_comparison/
 ```
 
 ## <ins>ADAPTING THE SNAKEMAKE FILE:</ins>
