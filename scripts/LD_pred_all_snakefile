@@ -5,7 +5,7 @@ today = date.today().strftime("%Y-%m-%d")
 print("\nToday's date:", today)
 
 # === Directories ===
-project_dir = "/staging/leuven/stg_00092/IBP_PRSproject/1_Intestinal_Bowel_Disease/PRS_pipeline_binary_phenotypes/"
+project_dir = <parent-directory> + "/PRS_pipeline_binary_phenotypes/"
 plink_output_dir = "output_data/001_plink/"
 prsice_output_dir = "output_data/002_prsice/"
 lasso_output_dir = "output_data/003_lassosum/"
