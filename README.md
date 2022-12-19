@@ -40,9 +40,9 @@ It includes the following folders:
 During development we stumbled across a problem implementing LDpred due to its drastically large memory requirements. Therefore, we developed two pipelines within this repository, one with and without LDpred. If the user would like to use the pipeline with LDpred they must also have a either a **small dataset** or access to the **unimputed data**. If either of these expectations are not met then the user will likely not have sufficient resources. 
 
 Therefore, the `scripts`directory contains the following Snakefiles and .pbs files:
-* `LD_pred_all.pbs`: SLURM job requierd for running ```LD_pred_all_snakefile```
+* `LD_pred_all_job.pbs`: SLURM job requierd for running ```LD_pred_all_snakefile```
 * `LD_pred_all_snakefile`: the snakemake (pipeline) which runs also LDpred
-* `imp_only.pbs`: SLURM job required for running ```imp_only_snakefile```
+* `imp_only_job.pbs`: SLURM job required for running ```imp_only_snakefile```
 * `imp_only_snakefile`: the snakemake (pipeline) which does not run LDpred
 
 
@@ -152,25 +152,27 @@ The more thresholds, shrinkage parameters and p-values for LDpred that are teste
 
 This pipeline was developed using the Vlaams Supercomputer Centrum and utilizes a SLURM job scheduler. The user should look into details about their own institution's cluster and scheduler. Begin your BASH script by setting the directory to the global snakemake file downloaded from this repository. Further, makesure you have created an envinroment from the `snakemake.yml` we provided as this will prevent version and dependcy issues.
 
-<ins>imp_only.pbs: </ins>
+Important: do not place the pbs and the snakefile on separated directories. If you do so, add a ```cd <directory_to_snakemake>``` line in the pbs file so it finds the Snakefile to be run.
+
+<ins>imp_only_job.pbs: </ins>
 We recomend the user allote at least 10 hours for the pipeline to run as the shrinkage based methods are rather computationally intesive. This will avoid running into walltime issues. Further, these shrinkage tools require large amounts of data so do not be shy with the amount of data requested.
+
 
 ```
 #!/usr/bin/env bash
 #PBS -l nodes=1:ppn=4
 #PBS -l walltime=10:00:00
 #PBS -l pmem=40gb
-#PBS -A lp_edu_bioinformatics_2122
+#PBS -A <account>
 
-cd ~
-cd <directory_to_snakemake_file>
+#cd <directory_to_snakemake>
 module purge
 eval "$(conda shell.bash hook)"
 conda activate snakemake_PRS
 snakemake -s imp_only_snakefile --cores 4 --use-conda
 ```
 
-<ins>LD_pred_all.pbs: </ins>
+<ins>LD_pred_all_job.pbs: </ins>
 To run the snakemake considering LDpred we strongly beleive access to a partition on your cluster that allows for very large memory allocation is needed, hence why we specified `#PBS -l pmem=720gb` and `#PBS -l partition = bigmem`. Therefore, it is recommended to be aggressive with the amount of memory and the allocated wall time. Besides the header take care to pay attention to the name of the snakefile has also changed.
 ```
 #!/usr/bin/env bash
@@ -180,8 +182,7 @@ To run the snakemake considering LDpred we strongly beleive access to a partitio
 #PBS -l partition = bigmem
 #PBS -A <account>
 
-cd ~
-cd <directory_to_snakemake>
+#cd <directory_to_snakemake>
 module purge
 eval "$(conda shell.bash hook)"
 conda activate snakemake_PRS
