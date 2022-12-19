@@ -115,6 +115,8 @@ Snakemake is a wonderful workflow engine which allows for easy adaptability and 
 
 imp_only_snakefile:
 ```
+project_dir = <parent-directory> + "/PRS_pipeline_binary_phenotypes/" #Change <parent-directory> by the directory in which you cloned the repository
+
 # === Prefix of the files  ===
 TARGET_files = "IBD_GSA_fin_maf" #prefix of target file
 EXTERNAL_file = "1000G_EUR_fin_maf" #prefix of external (1000 Genomes) file
