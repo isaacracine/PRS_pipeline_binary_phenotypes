@@ -22,7 +22,7 @@ dependencies:
   - bwidget=1.9.14=ha770c72_1
   - bzip2=1.0.8=h7f98852_4
   - c-ares=1.18.1=h7f98852_0
-  - ca-certificates=2022.10.11=h06a4308_0
+  - ca-certificates=2022.12.7=ha878542_0
   - cairo=1.16.0=ha61ee94_1014
   - cffi=1.15.1=py310h255011f_1
   - curl=7.85.0=h2283fc2_0
@@ -114,7 +114,7 @@ dependencies:
   - nest-asyncio=1.5.6=pyhd8ed1ab_0
   - notebook=6.5.1=pyha770c72_0
   - notebook-shim=0.2.0=pyhd8ed1ab_0
-  - openssl=3.0.5=h166bdaf_2
+  - openssl=3.0.8=h0b41bf4_0
   - packaging=21.3=pyhd8ed1ab_0
   - pandoc=2.19.2=ha770c72_0
   - pandocfilters=1.5.0=pyhd8ed1ab_0
@@ -268,6 +268,7 @@ dependencies:
   - r-proxy=0.4_27=r42h06615bd_1
   - r-pryr=0.1.5=r42h7525677_1
   - r-ps=1.7.1=r42h06615bd_1
+  - r-pscl=1.5.5=r42h166bdaf_2
   - r-purrr=0.3.5=r42h06615bd_1
   - r-quantmod=0.4.20=r42hc72bb7e_1
   - r-r6=2.5.1=r42hc72bb7e_1
@@ -366,4 +367,4 @@ dependencies:
   - zipp=3.9.0=pyhd8ed1ab_0
   - zlib=1.2.13=h166bdaf_4
   - zstd=1.5.2=h6239696_4
-prefix: /data/leuven/345/vsc34562/miniconda3/envs/ibp_2022
+prefix: /data/leuven/344/vsc34483/miniconda3/envs/ibp_2022
